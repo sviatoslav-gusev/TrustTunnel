@@ -388,7 +388,12 @@ pub(crate) fn encode_request(request: &RequestHeaders) -> Bytes {
 
     encoded.put(request.method.as_str().as_bytes());
     encoded.put([b' '].as_slice());
-    encoded.put(request.uri.path().as_bytes());
+    encoded.put(
+        request.uri.path_and_query()
+            .map(http::uri::PathAndQuery::as_str)
+            .unwrap_or("/")
+            .as_bytes()
+    );
     encoded.put(" HTTP/1.".as_bytes());
     encoded.put([('0' as u32 + version_minor_digit(request.version)) as u8].as_slice());
     encoded.put("\r\n".as_bytes());
