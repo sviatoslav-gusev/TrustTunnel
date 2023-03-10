@@ -382,8 +382,11 @@ mod tests {
         ];
 
         for sample in test_samples {
-            let meta = check_protocol_selection(sample.listen_protocols.clone(), sample.advertised_protocols.clone())
-                .expect(&format!("{:?}", (sample.listen_protocols.iter().map(listen_protocol_settings_as_str).collect::<Vec<_>>(), sample.advertised_protocols)));
+            let meta = check_protocol_selection(
+                sample.listen_protocols.clone(), sample.advertised_protocols.clone(),
+            ).unwrap_or_else(|_| panic!(
+                "{:?}", (sample.listen_protocols.iter().map(listen_protocol_settings_as_str).collect::<Vec<_>>(), sample.advertised_protocols)
+            ));
             assert_eq!(sample.expected_selection, meta.protocol);
         }
     }

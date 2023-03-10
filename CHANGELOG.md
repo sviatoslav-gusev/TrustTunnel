@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.9.30
+
 * Added support for dynamic reloading of TLS hosts settings.  
   API changes in the library:
     * `tunnel_tls_hosts`, `ping_tls_hosts` and `speed_tls_hosts` from `settings::Settings`,

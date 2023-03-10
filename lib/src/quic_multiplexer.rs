@@ -185,7 +185,7 @@ impl QuicMultiplexer {
     fn read_udp_socket(&mut self) -> io::Result<Option<QuicSocket>> {
         const READ_BUDGET: usize = 16;
 
-        let mut buffer = [0; net_utils::MAX_DATAGRAM_SIZE];
+        let mut buffer = [0; net_utils::MAX_UDP_PAYLOAD_SIZE];
         for _ in 0..READ_BUDGET {
             match self.socket.try_recv_from(&mut buffer) {
                 Ok((n, peer)) => match self.on_udp_packet(&peer, &mut buffer[..n]) {
@@ -286,7 +286,7 @@ impl QuicMultiplexer {
 
         if !quiche::version_is_supported(header.version) {
             log_id!(trace, self.id, "Doing version negotiation: {:?}", header);
-            let mut out = [0; net_utils::MAX_DATAGRAM_SIZE];
+            let mut out = [0; net_utils::MAX_UDP_PAYLOAD_SIZE];
             let n = quiche::negotiate_version(&header.scid, &header.dcid, &mut out)
                 .map_err(|e|
                     io::Error::new(ErrorKind::Other, format!("Version negotiation failed: {}", e))
@@ -313,7 +313,7 @@ impl QuicMultiplexer {
 
         if quic_token.is_empty() {
             log_id!(trace, self.id, "Doing stateless retry: {:?}", header);
-            let mut out = [0; net_utils::MAX_DATAGRAM_SIZE];
+            let mut out = [0; net_utils::MAX_UDP_PAYLOAD_SIZE];
             let n = quiche::retry(
                 &header.scid, &header.dcid, &scid,
                 &mint_token(header, &self.token_prefix, peer), header.version, &mut out,
@@ -586,8 +586,7 @@ impl QuicSocket {
     pub fn read(&self, stream_id: u64) -> io::Result<Option<Bytes>> {
         let chunk = {
             const READ_CHUNK_SIZE: usize = 64 * 1024;
-            let mut bytes = BytesMut::with_capacity(READ_CHUNK_SIZE);
-            bytes.resize(READ_CHUNK_SIZE, 0);
+            let mut bytes = BytesMut::zeroed(READ_CHUNK_SIZE);
 
             let mut read_offset = 0;
             loop {
@@ -810,7 +809,7 @@ impl HandshakingConnection {
 fn flush_pending_data(
     quic_conn: &mut quiche::Connection, udp_socket: &UdpSocket, peer: &SocketAddr, id: &log_utils::IdChain<u64>,
 ) -> io::Result<()> {
-    let mut out = [0; net_utils::MAX_DATAGRAM_SIZE];
+    let mut out = [0; net_utils::MAX_UDP_PAYLOAD_SIZE];
     loop {
         match quic_conn.send(&mut out) {
             Ok((n, _)) => udp_socket_send_to(udp_socket, &out[..n], peer, id)?,

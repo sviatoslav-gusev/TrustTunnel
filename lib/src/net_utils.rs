@@ -11,7 +11,10 @@ use bytes::{Buf, BufMut, Bytes, BytesMut};
 pub(crate) const MIN_LINK_MTU: usize = 1280;
 pub(crate) const MIN_IPV4_HEADER_SIZE: usize = 20;
 pub(crate) const MIN_IPV6_HEADER_SIZE: usize = 40;
-pub(crate) const MAX_DATAGRAM_SIZE: usize = 64 * 1024;
+pub(crate) const MAX_IP_PACKET_SIZE: usize = 2_usize.pow(16);
+pub(crate) const UDP_HEADER_SIZE: usize = 8;
+/// IPv6 allows sending slightly bigger datagrams, but assume it does not matter
+pub(crate) const MAX_UDP_PAYLOAD_SIZE: usize = MAX_IP_PACKET_SIZE - MIN_IPV4_HEADER_SIZE - UDP_HEADER_SIZE;
 pub(crate) const PLAIN_DNS_PORT_NUMBER: u16 = 53;
 pub(crate) const PLAIN_HTTP_PORT_NUMBER: u16 = 80;
 
@@ -193,13 +196,16 @@ pub(crate) fn libc_to_socket_addr(addr: &libc::sockaddr_storage) -> SocketAddr {
     match addr.ss_family as libc::c_int {
         libc::AF_INET => unsafe {
             let addr = &*(addr as *const _ as *const libc::sockaddr_in);
-            SocketAddrV4::new(Ipv4Addr::from(addr.sin_addr.s_addr.to_ne_bytes()), addr.sin_port).into()
+            SocketAddrV4::new(
+                Ipv4Addr::from(addr.sin_addr.s_addr.to_ne_bytes()),
+                u16::from_be(addr.sin_port)
+            ).into()
         }
         libc::AF_INET6 => unsafe {
             let addr = &*(addr as *const _ as *const libc::sockaddr_in6);
             SocketAddrV6::new(
                 Ipv6Addr::from(addr.sin6_addr.s6_addr),
-                addr.sin6_port,
+                u16::from_be(addr.sin6_port),
                 addr.sin6_flowinfo,
                 addr.sin6_scope_id,
             ).into()
@@ -211,8 +217,7 @@ pub(crate) fn libc_to_socket_addr(addr: &libc::sockaddr_storage) -> SocketAddr {
 /// Do [`libc::recvfrom`] over `fd` in a buffer of `buffer_size` size.
 /// If [`None`], `buffer_size` defaults to [`MIN_LINK_MTU`].
 pub(crate) fn recv_from(fd: libc::c_int, buffer_size: Option<usize>) -> io::Result<(IpAddr, Bytes)> {
-    let mut buffer = BytesMut::new();
-    buffer.resize(buffer_size.unwrap_or(MIN_LINK_MTU), 0);
+    let mut buffer = BytesMut::zeroed(buffer_size.unwrap_or(MIN_LINK_MTU));
 
     unsafe {
         let mut peer = std::mem::zeroed::<libc::sockaddr_storage>();
@@ -424,5 +429,41 @@ pub(crate) const fn is_global_ip(ip: &IpAddr) -> bool {
     match ip {
         IpAddr::V4(x) => is_global_ipv4(x),
         IpAddr::V6(x) => is_global_ipv6(x),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::{Ipv4Addr, Ipv6Addr};
+    use crate::net_utils::{libc_to_socket_addr, socket_addr_to_libc};
+
+    #[test]
+    fn sockaddr_conversion_v4() {
+        let ip = Ipv4Addr::from([1, 2, 3, 4]);
+        let port = 1234;
+
+        let (sa, sa_len) = socket_addr_to_libc(&(ip, port).into());
+        assert_eq!(sa.ss_family as libc::c_int, libc::AF_INET);
+        assert_eq!(std::mem::size_of::<libc::sockaddr_in>(), sa_len as usize);
+        assert_eq!(port.to_be(), unsafe { (*(&sa as *const libc::sockaddr_storage as *const libc::sockaddr_in)).sin_port });
+
+        let sa = libc_to_socket_addr(&sa);
+        assert_eq!(sa.ip(), ip);
+        assert_eq!(sa.port(), port);
+    }
+
+    #[test]
+    fn sockaddr_conversion_v6() {
+        let ip = Ipv6Addr::from(0x102030405060708090a0b0c0d0e0f00d_u128);
+        let port = 1234;
+
+        let (sa, sa_len) = socket_addr_to_libc(&(ip, port).into());
+        assert_eq!(sa.ss_family as libc::c_int, libc::AF_INET6);
+        assert_eq!(std::mem::size_of::<libc::sockaddr_in6>(), sa_len as usize);
+        assert_eq!(port.to_be(), unsafe { (*(&sa as *const libc::sockaddr_storage as *const libc::sockaddr_in6)).sin6_port });
+
+        let sa = libc_to_socket_addr(&sa);
+        assert_eq!(sa.ip(), ip);
+        assert_eq!(sa.port(), port);
     }
 }

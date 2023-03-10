@@ -309,11 +309,10 @@ impl DatagramSource {
             Some(x) => x.socket.clone(),
         };
 
-        let mut buffer = BytesMut::new();
-        buffer.resize(net_utils::MAX_DATAGRAM_SIZE, 0);
+        let mut buffer = BytesMut::zeroed(net_utils::MAX_UDP_PAYLOAD_SIZE);
         let (n, peer) = socket.recv_from(buffer.as_mut()).await
             .map_err(socks_to_io_error)?;
-        buffer.resize(n, 0);
+        buffer.truncate(n);
 
         Ok(Some(forwarder::UdpDatagramReadStatus::Read(forwarder::UdpDatagram {
             meta: forwarder::UdpDatagramMeta {

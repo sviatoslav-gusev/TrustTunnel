@@ -11,7 +11,6 @@ use bytes::Bytes;
 use tokio::net::UdpSocket;
 use tokio::sync;
 use crate::{datagram_pipe, downstream, forwarder, log_id, log_utils, net_utils};
-use crate::net_utils::MAX_DATAGRAM_SIZE;
 
 
 struct Connection {
@@ -95,7 +94,7 @@ impl MultiplexerSource {
             .get(meta)
             .map(|conn| conn.socket.clone())?;
 
-        let mut buffer = Vec::with_capacity(MAX_DATAGRAM_SIZE);
+        let mut buffer = Vec::with_capacity(net_utils::MAX_UDP_PAYLOAD_SIZE);
         match socket.try_recv_buf(&mut buffer) {
             Ok(_) => Some(forwarder::UdpDatagramReadStatus::Read(forwarder::UdpDatagram {
                 meta: meta.reversed(),
