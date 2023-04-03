@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.9.36
+
 * The endpoint is now capable of handling service requests on the main tls domain.
   API changes in the library:
     * `tunnel_hosts` field of `settings::TlsHostsSettings` structure is renamed to `main_hosts`
