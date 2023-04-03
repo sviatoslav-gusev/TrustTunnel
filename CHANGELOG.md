@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## 0.9.38
+
 * Fixed enormous timeout of TCP connections establishment procedure.
   API changes in the library:
     * added `connection_establishment_timeout` field into `settings::Settings`
