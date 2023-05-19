@@ -66,6 +66,7 @@ async fn listen_inner(
                     let sni = sni.clone();
                     let log_id = log_id.clone();
                     async move {
+                        manager.active_streams_num.fetch_add(1, Ordering::AcqRel);
                         if let Err(e) = handle_stream(settings, x, protocol, sni, &log_id).await {
                             log_id!(debug, log_id, "Request failed: {}", e);
                         }
