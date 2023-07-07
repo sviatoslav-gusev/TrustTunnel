@@ -2,7 +2,7 @@
 
 set -e
 
-MANIFEST_FILE=$2
+MANIFEST_FILE=$1
 
 increment_version() {
   major=${1%%.*}
@@ -13,7 +13,7 @@ increment_version() {
 
 VERSION=$(grep "version = " "$MANIFEST_FILE" | head -n 1 | sed -e 's/version = "\(.*\)"/\1/')
 
-argument_version=$1
+argument_version=$2
 if [ -z "$argument_version" ]
 then
   NEW_VERSION=$(increment_version ${VERSION})
