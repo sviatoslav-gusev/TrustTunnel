@@ -134,6 +134,9 @@ Deploy artifacts:
             #!/bin/bash
             set -x -e
 
+            printf "%b\n" "${bamboo_sshSecretKey}" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+
             VERSION=$(cat endpoint/Cargo.toml | grep "version = " | head -n 1 | sed -e 's/version = "\(.*\)"/\1/')
             TAG=v${VERSION}
             git tag -d ${TAG} || true
