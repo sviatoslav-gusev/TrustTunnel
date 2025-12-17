@@ -136,15 +136,18 @@ Deploy artifacts:
 
             VERSION=$(cat endpoint/Cargo.toml | grep "version = " | head -n 1 | sed -e 's/version = "\(.*\)"/\1/')
             TAG=v${VERSION}
+            git tag -d ${TAG} || true
             git tag ${TAG}
+            git remote set-url origin "${bamboo_planRepository_1_repositoryUrl}"
             git push origin ${TAG}
+
             # TODO: change to bamboo_githubPublicRepoPassword when repo become public
             git clone https://${bamboo_githubPrivateRepoPassword}:@github.com/TrustTunnel/TrustTunnel/
             cd TrustTunnel
             CHANGELOG_URL="https://github.com/TrustTunnel/TrustTunnel/blob/${TAG}/CHANGELOG.md"
             # TODO: change to bamboo_githubPublicRepoPassword when repo become public
             gh config set -h github.com oauth_token "${bamboo_githubPrivateRepoPassword}" || exit 1
-            gh release delete -y --cleanup-tag ${TAG} || true
+            gh release delete -y ${TAG} || true
             gh release create ${TAG} -t "${TAG}" -n "See [CHANGELOG.md](${CHANGELOG_URL}) for the list of changes."
             gh release upload ${TAG} ../build_linux/trusttunnel-v${VERSION}-linux-x86_64.tar.gz
             gh release upload ${TAG} ../build_linux/trusttunnel-v${VERSION}-linux-aarch64.tar.gz
