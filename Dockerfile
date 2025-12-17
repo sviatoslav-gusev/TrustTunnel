@@ -21,13 +21,13 @@ RUN make endpoint/build
 RUN make endpoint/build-wizard
 
 # Copy binaries
-FROM debian AS vpn-endpoint
+FROM debian AS trusttunnel-endpoint
 ARG ENDPOINT_DIR_NAME="TrustTunnel"
 ARG LOG_LEVEL="info"
 COPY --from=build /home/$ENDPOINT_DIR_NAME/target/release/setup_wizard /bin/
-COPY --from=build /home/$ENDPOINT_DIR_NAME/target/release/vpn_endpoint /bin/
+COPY --from=build /home/$ENDPOINT_DIR_NAME/target/release/trusttunnel_endpoint /bin/
 COPY --chmod=755  /docker-entrypoint.sh /scripts/
-WORKDIR /vpn_endpoint
-VOLUME /vpn_endpoint/
+WORKDIR /trusttunnel_endpoint
+VOLUME /trusttunnel_endpoint/
 ENTRYPOINT ["sh", "/scripts/docker-entrypoint.sh"]
 

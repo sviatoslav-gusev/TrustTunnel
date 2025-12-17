@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
-use vpn_libs_endpoint::settings::{ForwardProtocolSettings, Http1Settings, Http2Settings, IcmpSettings, ListenProtocolSettings, MetricsSettings, QuicSettings, Settings, Socks5ForwarderSettings};
-use vpn_libs_endpoint::utils::ToTomlComment;
+use trusttunnel::settings::{ForwardProtocolSettings, Http1Settings, Http2Settings, IcmpSettings, ListenProtocolSettings, MetricsSettings, QuicSettings, Settings, Socks5ForwarderSettings};
+use trusttunnel::utils::ToTomlComment;
 
 pub static MAIN_TABLE: Lazy<String> = Lazy::new(|| format!(
     r#"{}

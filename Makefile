@@ -33,12 +33,12 @@ endpoint/setup: endpoint/build-wizard
 .PHONY: endpoint/build
 ## Build the endpoint
 endpoint/build:
-	cargo build $(CARGO_BUILD_TYPE) --bin vpn_endpoint
+	cargo build $(CARGO_BUILD_TYPE) --bin trusttunnel_endpoint
 
 .PHONY: endpoint/run
 ## Run the endpoint with the existing configuration files
 endpoint/run: endpoint/build
-	cargo run $(CARGO_BUILD_TYPE) --bin vpn_endpoint -- \
+	cargo run $(CARGO_BUILD_TYPE) --bin trusttunnel_endpoint -- \
 		-l "$(LOG_LEVEL)" "$(CONFIG_FILE)" "$(HOSTS_CONFIG_FILE)"
 
 .PHONY: endpoint/gen_client_config
@@ -46,7 +46,7 @@ endpoint/run: endpoint/build
 endpoint/gen_client_config:
 	$(if $(CLIENT_NAME),,$(error CLIENT_NAME is not set. Specify the client name to generate the config for))
 	$(if $(ENDPOINT_ADDRESS),,$(error ENDPOINT_ADDRESS is not set. Set it to `ip:port` that client is going to use to connect to the endpoint))
-	cargo run $(CARGO_BUILD_TYPE) --bin vpn_endpoint -- \
+	cargo run $(CARGO_BUILD_TYPE) --bin trusttunnel_endpoint -- \
 		-c "$(CLIENT_NAME)" --address "$(ENDPOINT_ADDRESS)" "$(CONFIG_FILE)" "$(HOSTS_CONFIG_FILE)"
 
 .PHONY: endpoint/clean

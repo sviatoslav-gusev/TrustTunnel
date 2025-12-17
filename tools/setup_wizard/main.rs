@@ -1,6 +1,6 @@
 use std::fs;
 use std::sync::{Mutex, MutexGuard};
-use vpn_libs_endpoint::settings::{Settings, TlsHostsSettings};
+use trusttunnel::settings::{Settings, TlsHostsSettings};
 use crate::user_interaction::{ask_for_agreement, ask_for_input, checked_overwrite};
 
 mod composer;
@@ -169,10 +169,10 @@ Required in non-interactive mode."#),
 
     if let (Some(l), Some(h)) = (library_settings_path, hosts_settings_path) {
         println!("To start endpoint, run the following command:");
-        println!("\tvpn_endpoint {} {}", l, h);
+        println!("\ttrusttunnel_endpoint {} {}", l, h);
     }
     println!("To see full set of the available options, run the following command:");
-    println!("\tvpn_endpoint -h");
+    println!("\ttrusttunnel_endpoint -h");
 }
 
 fn find_existent_settings<T: serde::de::DeserializeOwned>(path: &str) -> Option<String> {

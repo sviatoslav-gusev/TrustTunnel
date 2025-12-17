@@ -5,7 +5,7 @@ use bytes::Bytes;
 use http::{Request, Response};
 use log::info;
 use tokio::net::TcpListener;
-use vpn_libs_endpoint::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, ReverseProxySettings, Settings, TlsHostInfo, TlsHostsSettings};
+use trusttunnel::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, ReverseProxySettings, Settings, TlsHostInfo, TlsHostsSettings};
 
 mod common;
 

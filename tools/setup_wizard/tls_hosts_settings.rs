@@ -4,9 +4,9 @@ use std::path::Path;
 use chrono::Datelike;
 use rcgen::DnType;
 use x509_parser::extensions::GeneralName;
-use vpn_libs_endpoint::settings::{TlsHostInfo, TlsHostsSettings};
-use vpn_libs_endpoint::utils;
-use vpn_libs_endpoint::utils::Either;
+use trusttunnel::settings::{TlsHostInfo, TlsHostsSettings};
+use trusttunnel::utils;
+use trusttunnel::utils::Either;
 use crate::Mode;
 use crate::user_interaction::{ask_for_agreement, ask_for_input, checked_overwrite};
 

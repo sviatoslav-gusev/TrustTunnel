@@ -1,6 +1,6 @@
 use std::fs;
 use toml_edit::{ArrayOfTables, Item, Key, Table};
-use vpn_libs_endpoint::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, Settings};
+use trusttunnel::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, Settings};
 use crate::Mode;
 use crate::user_interaction::{ask_for_agreement, ask_for_input, ask_for_password, checked_overwrite, select_variant};
 
@@ -124,7 +124,7 @@ fn compose_credentials_content(clients: impl Iterator<Item=(String, String)>) ->
     doc.to_string()
 }
 
-fn generate_rules_toml_content(rules_config: &vpn_libs_endpoint::rules::RulesConfig) -> String {
+fn generate_rules_toml_content(rules_config: &trusttunnel::rules::RulesConfig) -> String {
     let mut content = String::new();
     
     // Add header comments explaining the format

@@ -132,11 +132,11 @@ These commands perform the following actions:
 Alternatively, you can run the endpoint in a docker container:
 
 ```shell
-docker build -t vpn-endpoint:latest . # build an image
+docker build -t trusttunnel-endpoint:latest . # build an image
 
-docker run -it vpn-endpoint:latest --name vpn-endpoint # create docker container and start it in an interactive mode
+docker run -it trusttunnel-endpoint:latest --name trusttunnel-endpoint # create docker container and start it in an interactive mode
 
-docker start -i vpn-endpoint # if you need to start your vpn endpoint again
+docker start -i trusttunnel-endpoint # if you need to start your vpn endpoint again
 ```
 
 The generated certificate (by default, it resides in `certs/cert.pem` or `/TrustTunnel/certs/cert.pem` inside your docker volume) should be delivered to the client-side in some way. See the [Companion Client Repository](#companion-client-repository) for
@@ -149,7 +149,7 @@ For a more customized configuration experience, run the following commands:
 ```shell
 make endpoint/build-wizard  # If you skipped the previous chapter
 cargo run --bin setup_wizard  # Launches a dialogue session allowing you to tweak the settings
-cargo run --bin vpn_endpoint -- <lib-settings> <hosts-settings>  # File names depend on the previous step
+cargo run --bin trusttunnel_endpoint -- <lib-settings> <hosts-settings>  # File names depend on the previous step
 ```
 
 For additional details about the binary, refer to the [endpoint/README.md](./endpoint/README.md)
@@ -170,7 +170,7 @@ To generate the configuration run the following command:
 ```shell
 # <client_name> - name of the client those credentials will be included in the configuration
 # <public_ip_and_port> - `ip:port` that the user will use to connect to the endpoint
-cargo run --bin vpn_endpoint -- <lib-settings> <host-settings> -c <client_name> -a <public_ip_and_port>
+cargo run --bin trusttunnel_endpoint -- <lib-settings> <host-settings> -c <client_name> -a <public_ip_and_port>
 # or
 make endpoint/gen_client_config CLIENT_NAME="<client_name>" ENDPOINT_ADDRESS="<public_ip_and_port"
 ```

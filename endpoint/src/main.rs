@@ -1,13 +1,13 @@
 use std::sync::Arc;
 use log::{error, info, LevelFilter};
 use tokio::signal;
-use vpn_libs_endpoint::authentication::registry_based::RegistryBasedAuthenticator;
-use vpn_libs_endpoint::authentication::Authenticator;
-use vpn_libs_endpoint::core::Core;
-use vpn_libs_endpoint::{log_utils, settings};
-use vpn_libs_endpoint::settings::Settings;
-use vpn_libs_endpoint::shutdown::Shutdown;
-use vpn_libs_endpoint::client_config;
+use trusttunnel::authentication::registry_based::RegistryBasedAuthenticator;
+use trusttunnel::authentication::Authenticator;
+use trusttunnel::core::Core;
+use trusttunnel::{log_utils, settings};
+use trusttunnel::settings::Settings;
+use trusttunnel::shutdown::Shutdown;
+use trusttunnel::client_config;
 
 
 const VERSION_STRING: &str = env!("CARGO_PKG_VERSION");

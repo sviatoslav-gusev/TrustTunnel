@@ -2537,6 +2537,75 @@ dependencies = [
 ]
 
 [[package]]
+name = "trusttunnel"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64 0.21.2",
+ "boring",
+ "bytes",
+ "cc",
+ "chrono",
+ "dynfmt",
+ "futures",
+ "h2",
+ "hex",
+ "http",
+ "httparse",
+ "hyper",
+ "ipnet",
+ "lazy_static",
+ "libc",
+ "log",
+ "macros",
+ "once_cell",
+ "prometheus",
+ "quiche",
+ "ring",
+ "rustls",
+ "rustls-pemfile",
+ "serde",
+ "smallvec",
+ "tls-parser",
+ "tokio",
+ "tokio-rustls",
+ "toml_edit",
+]
+
+[[package]]
+name = "trusttunnel_endpoint"
+version = "0.9.70"
+dependencies = [
+ "clap",
+ "console-subscriber",
+ "log",
+ "sentry",
+ "tokio",
+ "toml",
+ "trusttunnel",
+]
+
+[[package]]
+name = "trusttunnel_endpoint_tools"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clap",
+ "dialoguer",
+ "hex",
+ "ipnet",
+ "lazy_static",
+ "log",
+ "once_cell",
+ "rcgen",
+ "serde",
+ "toml",
+ "toml_edit",
+ "trusttunnel",
+ "x509-parser",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2638,75 +2707,6 @@ name = "valuable"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "830b7e5d4d90034032940e4ace0d9a9a057e7a45cd94e6c007832e39edb82f6d"
-
-[[package]]
-name = "vpn_endpoint"
-version = "0.9.70"
-dependencies = [
- "clap",
- "console-subscriber",
- "log",
- "sentry",
- "tokio",
- "toml",
- "vpn_libs_endpoint",
-]
-
-[[package]]
-name = "vpn_endpoint_tools"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "clap",
- "dialoguer",
- "hex",
- "ipnet",
- "lazy_static",
- "log",
- "once_cell",
- "rcgen",
- "serde",
- "toml",
- "toml_edit",
- "vpn_libs_endpoint",
- "x509-parser",
-]
-
-[[package]]
-name = "vpn_libs_endpoint"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64 0.21.2",
- "boring",
- "bytes",
- "cc",
- "chrono",
- "dynfmt",
- "futures",
- "h2",
- "hex",
- "http",
- "httparse",
- "hyper",
- "ipnet",
- "lazy_static",
- "libc",
- "log",
- "macros",
- "once_cell",
- "prometheus",
- "quiche",
- "ring",
- "rustls",
- "rustls-pemfile",
- "serde",
- "smallvec",
- "tls-parser",
- "tokio",
- "tokio-rustls",
- "toml_edit",
-]
 
 [[package]]
 name = "want"

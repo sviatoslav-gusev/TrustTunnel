@@ -8,9 +8,9 @@ use http::Request;
 use log::info;
 use tokio::io::AsyncReadExt;
 use tokio::net::TcpListener;
-use vpn_libs_endpoint::authentication;
-use vpn_libs_endpoint::authentication::registry_based::RegistryBasedAuthenticator;
-use vpn_libs_endpoint::settings::{ForwardProtocolSettings, Http1Settings, ListenProtocolSettings, Settings, Socks5ForwarderSettings, TlsHostInfo, TlsHostsSettings};
+use trusttunnel::authentication;
+use trusttunnel::authentication::registry_based::RegistryBasedAuthenticator;
+use trusttunnel::settings::{ForwardProtocolSettings, Http1Settings, ListenProtocolSettings, Settings, Socks5ForwarderSettings, TlsHostInfo, TlsHostsSettings};
 
 mod common;
 

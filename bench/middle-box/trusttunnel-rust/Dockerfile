@@ -14,8 +14,8 @@ COPY $ENDPOINT_DIR /bench/$ENDPOINT_DIR
 WORKDIR /bench/
 RUN cd "$ENDPOINT_DIR" && \
     cargo build --release --bin setup_wizard && \
-    cargo build --release --bin vpn_endpoint && \
-    mv ./target/release/setup_wizard ./target/release/vpn_endpoint /bench/
+    cargo build --release --bin trusttunnel_endpoint && \
+    mv ./target/release/setup_wizard ./target/release/trusttunnel_endpoint /bench/
 
 RUN ./setup_wizard --mode non-interactive  \
     --address [::]:4433 \
@@ -28,4 +28,4 @@ ENV LOG_LEVEL=$LOG_LEVEL \
     CONFIG_FILE=$CONFIG_FILE \
     TLS_HOSTS_SETTINGS_FILE=$TLS_HOSTS_SETTINGS_FILE \
     RUST_BACKTRACE=1
-ENTRYPOINT ./vpn_endpoint -l "$LOG_LEVEL" "$CONFIG_FILE" "$TLS_HOSTS_SETTINGS_FILE" >>/tmp/vpn.log 2>&1
+ENTRYPOINT ./trusttunnel_endpoint -l "$LOG_LEVEL" "$CONFIG_FILE" "$TLS_HOSTS_SETTINGS_FILE" >>/tmp/vpn.log 2>&1

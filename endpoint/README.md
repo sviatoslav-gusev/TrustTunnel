@@ -31,7 +31,7 @@ A standalone application that allows any user to easily set up their own VPN ser
   their specific requirements. To view the available options, run the following command in the
   Terminal:
    ```shell
-   vpn_endpoint -h
+   trusttunnel_endpoint -h
    ```
 
 ---

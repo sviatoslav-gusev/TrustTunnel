@@ -9,7 +9,7 @@ use http::Request;
 use log::info;
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
 use tokio::net::{TcpListener, UdpSocket};
-use vpn_libs_endpoint::net_utils;
+use trusttunnel::net_utils;
 
 mod common;
 

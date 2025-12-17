@@ -20,11 +20,11 @@ use rustls::client::ServerCertVerified;
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::net::{TcpStream, UdpSocket};
 use tokio_rustls::TlsConnector;
-use vpn_libs_endpoint::authentication::{Authenticator, registry_based::RegistryBasedAuthenticator};
-use vpn_libs_endpoint::core::Core;
-use vpn_libs_endpoint::log_utils;
-use vpn_libs_endpoint::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, Settings, TlsHostInfo, TlsHostsSettings};
-use vpn_libs_endpoint::shutdown::Shutdown;
+use trusttunnel::authentication::{Authenticator, registry_based::RegistryBasedAuthenticator};
+use trusttunnel::core::Core;
+use trusttunnel::log_utils;
+use trusttunnel::settings::{Http1Settings, Http2Settings, ListenProtocolSettings, QuicSettings, Settings, TlsHostInfo, TlsHostsSettings};
+use trusttunnel::shutdown::Shutdown;
 
 pub const MAIN_DOMAIN_NAME: &str = "localhost";
 pub const ENDPOINT_IP: Ipv4Addr = Ipv4Addr::LOCALHOST;
@@ -46,7 +46,7 @@ pub fn make_cert_key_file() -> File {
     let file = File::new(
         std::env::temp_dir()
             .join(format!("vle-{}.pem",
-                          vpn_libs_endpoint::utils::hex_dump(
+                          trusttunnel::utils::hex_dump(
                               ring::rand::generate::<[u8; 16]>(&SystemRandom::new())
                                   .unwrap().expose().as_slice()
                           )

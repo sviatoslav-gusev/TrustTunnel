@@ -1,4 +1,4 @@
-use vpn_libs_endpoint::rules::{Rule, RuleAction, RulesConfig};
+use trusttunnel::rules::{Rule, RuleAction, RulesConfig};
 use crate::user_interaction::{ask_for_agreement, ask_for_input};
 use crate::get_mode;
 use log::{info, warn};

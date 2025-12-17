@@ -1,11 +1,11 @@
 [package]
-name = "vpn_libs_endpoint"
+name = "trusttunnel"
 version = "0.1.0"
 authors = ["Sergei Gunchenko <s.gunchenko@adguard.com>"]
 edition = "2021"
 
 [lib]
-name = "vpn_libs_endpoint"
+name = "trusttunnel"
 path = "src/lib.rs"
 doctest = false
 

@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::time::Duration;
 use http::Request;
-use vpn_libs_endpoint::net_utils;
+use trusttunnel::net_utils;
 
 mod common;
 

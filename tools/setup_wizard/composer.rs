@@ -1,7 +1,7 @@
 use std::iter::once;
 use toml_edit::{Document, value};
-use vpn_libs_endpoint::settings::{ForwardProtocolSettings, Http1Settings, Http2Settings, IcmpSettings, ListenProtocolSettings, MetricsSettings, QuicSettings, Settings};
-use vpn_libs_endpoint::utils::{IterJoin, ToTomlComment};
+use trusttunnel::settings::{ForwardProtocolSettings, Http1Settings, Http2Settings, IcmpSettings, ListenProtocolSettings, MetricsSettings, QuicSettings, Settings};
+use trusttunnel::utils::{IterJoin, ToTomlComment};
 use crate::template_settings;
 
 pub fn compose_document(settings: &Settings, credentials_path: &str, rules_path: &str) -> String {

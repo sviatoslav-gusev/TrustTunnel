@@ -1,5 +1,5 @@
 [package]
-name = "vpn_endpoint_tools"
+name = "trusttunnel_endpoint_tools"
 version = "0.1.0"
 authors = ["Sergei Gunchenko <s.gunchenko@adguard.com>"]
 edition = "2021"
@@ -21,5 +21,5 @@ rcgen = "0.10.0"
 serde = "1.0.164"
 toml = "0.7.4"
 toml_edit = "0.19.10"
-vpn_libs_endpoint = { version = "0.1", path = "../lib", features = ["rt_doc"] }
+trusttunnel = { version = "0.1", path = "../lib", features = ["rt_doc"] }
 x509-parser = "0.15.0"

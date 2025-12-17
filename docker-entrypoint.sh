@@ -28,7 +28,7 @@ main() {
         echo "Missing configuration file(s). Launching setup wizard."
         setup_wizard
     fi
-    vpn_endpoint vpn.toml hosts.toml
+    trusttunnel_endpoint vpn.toml hosts.toml
 }
 
 main
