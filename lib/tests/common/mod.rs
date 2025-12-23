@@ -259,6 +259,7 @@ pub struct Http3Session {
     quic_conn: quiche::Connection,
     h3_conn: h3::Connection,
     stream_id: Option<u64>,
+    is_tunnel: bool, // True for CONNECT requests - don't send FIN
 }
 
 impl Http3Session {
@@ -319,6 +320,7 @@ impl Http3Session {
             quic_conn,
             h3_conn,
             stream_id: Default::default(),
+            is_tunnel: false,
         }
     }
 
@@ -328,7 +330,7 @@ impl Http3Session {
     ) -> (http::response::Parts, Bytes) {
         let method = request.method().clone();
         self.send_request(request).await;
-        let response = self.recv_response().await;
+        let response = self.recv_response_with_method(&method).await;
 
         let content_length = (method == http::Method::CONNECT).then_some(0).or_else(|| {
             response
@@ -376,6 +378,7 @@ impl Http3Session {
         )
         .collect::<Vec<_>>();
 
+        // Always send request with fin=false, we'll send FIN separately after body
         self.stream_id = Some(
             self.h3_conn
                 .send_request(&mut self.quic_conn, &req, false)
@@ -411,24 +414,65 @@ impl Http3Session {
     }
 
     pub async fn recv_response(&mut self) -> http::response::Parts {
+        self.recv_response_with_method(&http::Method::GET).await
+    }
+    
+    async fn recv_response_with_method(&mut self, method: &http::Method) -> http::response::Parts {
         Self::read_out_socket(&self.socket, &mut self.quic_conn);
         Self::flush_quic_data(&self.socket, &mut self.quic_conn);
 
-        match self.poll().await {
-            h3::Event::Headers { list, .. } => {
-                let mut response = Response::builder().version(http::Version::HTTP_3);
-                for h in list {
-                    match h.name() {
-                        b":status" => response = response.status(h.value()),
-                        _ => response = response.header(h.name(), h.value()),
+        loop {
+            match self.poll().await {
+                h3::Event::Headers { list, .. } => {
+                    let mut response = Response::builder().version(http::Version::HTTP_3);
+                    for h in list {
+                        match h.name() {
+                            b":status" => response = response.status(h.value()),
+                            _ => response = response.header(h.name(), h.value()),
+                        }
                     }
-                }
 
-                let response = response.body(()).unwrap().into_parts().0;
-                info!("Received response: {:?}", response);
-                response
+                    let response = response.body(()).unwrap().into_parts().0;
+                    info!("Received response: {:?}", response);
+                    
+                    // Track if this is a CONNECT tunnel - don't send FIN for tunnels
+                    if method == &http::Method::CONNECT {
+                        self.is_tunnel = true;
+                    }
+
+                    if !self.is_tunnel {
+                        loop {
+                            let stream_id = self.stream_id();
+                            match self.h3_conn.send_body(&mut self.quic_conn, stream_id, &[], true) {
+                                Ok(_) => break,
+                                Err(h3::Error::Done) => {
+                                    Self::flush_quic_data(&self.socket, &mut self.quic_conn);
+                                    let _ = tokio::time::timeout(
+                                        self.quic_conn.timeout().unwrap(),
+                                        self.socket.readable(),
+                                    )
+                                    .await;
+                                    Self::read_out_socket(&self.socket, &mut self.quic_conn);
+                                }
+                                // If stream/connection already closed, that's fine
+                                Err(h3::Error::TransportError(_) | h3::Error::StreamBlocked | h3::Error::IdError) => {
+                                    break;
+                                }
+                                Err(e) => panic!("Failed to finish stream: {}", e),
+                            }
+                        }
+                        Self::flush_quic_data(&self.socket, &mut self.quic_conn);
+                    }
+                    
+                    return response;
+                }
+                h3::Event::Finished => {
+                    // Client-side FIN received (normal for requests without body)
+                    // Continue polling for response headers
+                    continue;
+                }
+                x => unreachable!("{:?}", x),
             }
-            x => unreachable!("{:?}", x),
         }
     }
 
@@ -479,6 +523,30 @@ impl Http3Session {
 
                 Self::read_out_socket(&self.socket, &mut self.quic_conn);
                 Self::flush_quic_data(&self.socket, &mut self.quic_conn);
+            }
+        }
+
+        // Don't send FIN for CONNECT tunnels - they remain bidirectional
+        if !self.is_tunnel {
+            loop {
+                let stream_id = self.stream_id();
+                match self.h3_conn.send_body(&mut self.quic_conn, stream_id, &[], true) {
+                    Ok(_) => break,
+                    Err(h3::Error::Done) => {
+                        Self::flush_quic_data(&self.socket, &mut self.quic_conn);
+                        let _ = tokio::time::timeout(
+                            self.quic_conn.timeout().unwrap(),
+                            self.socket.readable(),
+                        )
+                        .await;
+                        Self::read_out_socket(&self.socket, &mut self.quic_conn);
+                    }
+                    // If stream/connection already closed
+                    Err(h3::Error::TransportError(_) | h3::Error::StreamBlocked | h3::Error::IdError) => {
+                        break;
+                    }
+                    Err(e) => panic!("Failed to finish stream: {}", e),
+                }
             }
         }
 
