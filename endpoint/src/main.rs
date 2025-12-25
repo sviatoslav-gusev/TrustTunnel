@@ -1,4 +1,4 @@
-use log::{error, info, LevelFilter};
+use log::{debug, error, info, warn, LevelFilter};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::Arc;
@@ -12,7 +12,6 @@ use trusttunnel::shutdown::Shutdown;
 use trusttunnel::{log_utils, settings};
 
 const VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
-
 const VERSION_PARAM_NAME: &str = "v_e_r_s_i_o_n_do_not_change_this_name_it_will_break";
 const LOG_LEVEL_PARAM_NAME: &str = "log_level";
 const LOG_FILE_PARAM_NAME: &str = "log_file";
@@ -22,6 +21,45 @@ const CLIENT_CONFIG_PARAM_NAME: &str = "client_config";
 const ADDRESS_PARAM_NAME: &str = "address";
 const SENTRY_DSN_PARAM_NAME: &str = "sentry_dsn";
 const THREADS_NUM_PARAM_NAME: &str = "threads_num";
+
+#[cfg(unix)]
+fn increase_fd_limit() {
+    use nix::sys::resource::{getrlimit, setrlimit, Resource};
+    let max_rlim = 65536;
+
+    let (soft, hard) = match getrlimit(Resource::RLIMIT_NOFILE) {
+        Ok(limits) => limits,
+        Err(err) => {
+            warn!("Failed to get file descriptor limit: {}", err);
+            return;
+        }
+    };
+
+    let target_limit = std::cmp::min(hard, max_rlim);
+    if soft >= target_limit {
+        debug!(
+            "File descriptor limit is already {} (target: {})",
+            soft, target_limit
+        );
+        return;
+    }
+
+    if let Err(err) = setrlimit(Resource::RLIMIT_NOFILE, target_limit, hard) {
+        warn!(
+            "Failed to increase file descriptor limit from {} to {}: {}",
+            soft, target_limit, err
+        );
+        return;
+    }
+
+    debug!(
+        "Successfully increased file descriptor limit to {}",
+        target_limit
+    );
+}
+
+#[cfg(not(unix))]
+fn increase_fd_limit() {}
 
 fn main() {
     let args = clap::Command::new("VPN endpoint")
@@ -119,6 +157,8 @@ fn main() {
         },
     );
 
+    increase_fd_limit();
+
     let settings_path = args.get_one::<String>(SETTINGS_PARAM_NAME).unwrap();
     let settings: Settings = toml::from_str(
         &std::fs::read_to_string(settings_path).expect("Couldn't read the settings file"),
@@ -146,7 +186,7 @@ fn main() {
                     })
                     .unwrap_or_else(|_| {
                         panic!("Failed to parse address. Expected `ip` or `ip:port` format, found: `{}`", x);
-                    }) 
+                    })
             })
             .collect();
 
