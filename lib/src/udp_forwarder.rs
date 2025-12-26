@@ -1,3 +1,4 @@
+use crate::forwarder::UdpMultiplexer;
 use crate::{datagram_pipe, downstream, forwarder, log_id, log_utils, net_utils};
 use async_trait::async_trait;
 use bytes::Bytes;
@@ -45,13 +46,7 @@ enum PollStatus {
     SocketError(SocketError),
 }
 
-pub(crate) fn make_multiplexer(
-    id: log_utils::IdChain<u64>,
-) -> io::Result<(
-    Arc<dyn forwarder::UdpDatagramPipeShared>,
-    Box<dyn datagram_pipe::Source<Output = forwarder::UdpDatagramReadStatus>>,
-    Box<dyn datagram_pipe::Sink<Input = downstream::UdpDatagram>>,
-)> {
+pub(crate) fn make_multiplexer(id: log_utils::IdChain<u64>) -> io::Result<UdpMultiplexer> {
     let shared = Arc::new(MultiplexerShared {
         connections: Mutex::new(Default::default()),
     });

@@ -29,7 +29,7 @@ pub struct Rule {
 }
 
 /// Rules configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RulesConfig {
     /// List of filter rules
     #[serde(default)]
@@ -147,12 +147,6 @@ impl RulesEngine {
     /// Get a reference to the rules configuration
     pub fn config(&self) -> &RulesConfig {
         &self.rules
-    }
-}
-
-impl Default for RulesConfig {
-    fn default() -> Self {
-        Self { rule: vec![] }
     }
 }
 

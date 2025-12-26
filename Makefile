@@ -75,6 +75,7 @@ lint-md:
 .PHONY: lint-rust
 lint-rust:
 	cargo fmt --all -- --check
+	cargo clippy -- -D warnings
 
 ## Fix linter issues that are auto-fixable.
 .PHONY: lint-fix
@@ -83,6 +84,7 @@ lint-fix: lint-fix-rust lint-fix-md
 ## Auto-fix Rust code formatting issues with rustfmt.
 .PHONY: lint-fix-rust
 lint-fix-rust:
+	cargo clippy --fix --allow-dirty
 	cargo fmt --all
 
 ## Auto-fix markdown files.

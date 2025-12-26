@@ -68,7 +68,7 @@ fn add_ip_rule(rules: &mut Vec<Rule>) {
     );
 
     // Validate CIDR format
-    if let Err(_) = cidr.parse::<ipnet::IpNet>() {
+    if cidr.parse::<ipnet::IpNet>().is_err() {
         warn!("Invalid CIDR format. Skipping rule.");
         return;
     }
@@ -137,7 +137,7 @@ fn add_combined_rule(rules: &mut Vec<Rule>) {
     );
 
     // Validate CIDR format
-    if let Err(_) = cidr.parse::<ipnet::IpNet>() {
+    if cidr.parse::<ipnet::IpNet>().is_err() {
         warn!("Invalid CIDR format. Skipping rule.");
         return;
     }

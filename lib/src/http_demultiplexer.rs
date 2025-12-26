@@ -72,6 +72,6 @@ impl HttpDemux {
             .reverse_proxy
             .as_ref()
             .map(|x| x.path_mask.as_str())
-            .map_or(false, |x| request.uri.path().starts_with(x))
+            .is_some_and(|x| request.uri.path().starts_with(x))
     }
 }

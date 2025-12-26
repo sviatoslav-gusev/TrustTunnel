@@ -3,6 +3,7 @@ extern "C" {
     fn set_icmpv6_filter(fd: libc::c_int) -> libc::c_int;
 }
 
+use crate::forwarder::IcmpMultiplexer;
 use crate::settings::Settings;
 use crate::{datagram_pipe, downstream, forwarder, icmp_utils, log_utils, net_utils, utils};
 use async_trait::async_trait;
@@ -79,13 +80,7 @@ impl IcmpForwarder {
         }
     }
 
-    pub fn make_multiplexer(
-        &self,
-        id: log_utils::IdChain<u64>,
-    ) -> io::Result<(
-        Box<dyn datagram_pipe::Source<Output = forwarder::IcmpDatagram>>,
-        Box<dyn datagram_pipe::Sink<Input = downstream::IcmpDatagram>>,
-    )> {
+    pub fn make_multiplexer(&self, id: log_utils::IdChain<u64>) -> io::Result<IcmpMultiplexer> {
         let (tx, rx) = mpsc::channel(
             self.shared
                 .core_settings
@@ -421,9 +416,8 @@ impl RawPacketStream {
                 return Err(io::Error::last_os_error());
             }
 
-            let socket = AsyncFd::new(fd).map_err(|e| {
+            let socket = AsyncFd::new(fd).inspect_err(|_| {
                 libc::close(fd);
-                e
             })?;
 
             Ok(Self { inner: socket })

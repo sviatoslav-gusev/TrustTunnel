@@ -1,4 +1,4 @@
-use crate::forwarder::Forwarder;
+use crate::forwarder::{Forwarder, IcmpMultiplexer, UdpMultiplexer};
 use crate::settings::{ForwardProtocolSettings, Settings, Socks5ForwarderSettings};
 use crate::tcp_forwarder::TcpForwarder;
 use crate::{
@@ -157,11 +157,7 @@ impl Forwarder for Socks5Forwarder {
         &self,
         id: log_utils::IdChain<u64>,
         meta: forwarder::UdpMultiplexerMeta,
-    ) -> io::Result<(
-        Arc<dyn forwarder::UdpDatagramPipeShared>,
-        Box<dyn datagram_pipe::Source<Output = forwarder::UdpDatagramReadStatus>>,
-        Box<dyn datagram_pipe::Sink<Input = downstream::UdpDatagram>>,
-    )> {
+    ) -> io::Result<UdpMultiplexer> {
         let (tx, rx) = mpsc::channel(1);
         let shared = Arc::new(DatagramTransceiverShared {
             core_settings: self.context.settings.clone(),
@@ -202,12 +198,7 @@ impl Forwarder for Socks5Forwarder {
     fn make_icmp_datagram_multiplexer(
         &self,
         id: log_utils::IdChain<u64>,
-    ) -> io::Result<
-        Option<(
-            Box<dyn datagram_pipe::Source<Output = forwarder::IcmpDatagram>>,
-            Box<dyn datagram_pipe::Sink<Input = downstream::IcmpDatagram>>,
-        )>,
-    > {
+    ) -> io::Result<Option<IcmpMultiplexer>> {
         self.context
             .icmp_forwarder
             .as_ref()

@@ -360,13 +360,14 @@ pub(crate) fn rfc1071_checksum(bytes: &[u8]) -> u16 {
 /// - the unspecified address (see [`Ipv4Addr::is_unspecified()`]), and the whole
 ///   `0.0.0.0/8` block
 /// - addresses reserved for future protocols, except
-/// `192.0.0.9/32` and `192.0.0.10/32` which are globally routable
+///   `192.0.0.9/32` and `192.0.0.10/32` which are globally routable
 /// - addresses reserved for future use (see [IETF RFC 1112])
 /// - addresses reserved for networking devices benchmarking (see [IETF RFC 2544])
 ///
 /// [ipv4-sr]: https://www.iana.org/assignments/iana-ipv4-special-registry/iana-ipv4-special-registry.xhtml
 ///
 /// @todo: replace with [`Ipv4Addr::is_global`] when it becomes stable
+#[allow(clippy::nonminimal_bool)]
 pub(crate) const fn is_global_ipv4(ip: &Ipv4Addr) -> bool {
     let octets = ip.octets();
     // check if this address is 192.0.0.9 or 192.0.0.10. These addresses are the only two
@@ -414,15 +415,15 @@ pub(crate) const fn is_global_ipv4(ip: &Ipv4Addr) -> bool {
 pub(crate) const fn is_unicast_global_ipv6(ip: &Ipv6Addr) -> bool {
     let segments = ip.segments();
 
-    !ip.is_multicast()
-        && !ip.is_loopback()
+    !(ip.is_multicast()
+        || ip.is_loopback()
         // unicast address with link-local scope [RFC 4291]
-        && (segments[0] & 0xffc0) != 0xfe80
+        || (segments[0] & 0xffc0) == 0xfe80
         // unique local address (`fc00::/7`) [IETF RFC 4193]
-        && (segments[0] & 0xfe00) != 0xfc00
-        && !ip.is_unspecified()
+        || (segments[0] & 0xfe00) == 0xfc00
+        || ip.is_unspecified()
         // address reserved for documentation (`2001:db8::/32`) [IETF RFC 3849]
-        && !((segments[0] == 0x2001) && (segments[1] == 0xdb8))
+        || (segments[0] == 0x2001) && (segments[1] == 0xdb8))
 }
 
 /// Returns [`true`] if the address appears to be globally routable.

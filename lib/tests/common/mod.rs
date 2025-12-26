@@ -339,7 +339,7 @@ impl Http3Session {
                 .map(|x| x.to_str().unwrap().parse::<usize>().unwrap())
         });
         let mut content = BytesMut::with_capacity(content_length.unwrap_or_default());
-        while content_length.map_or(true, |x| content.len() < x) {
+        while content_length.is_none_or(|x| content.len() < x) {
             let mut buffer = [0; 64 * 1024];
             match self.recv(&mut buffer).await {
                 0 => break,
@@ -416,7 +416,7 @@ impl Http3Session {
     pub async fn recv_response(&mut self) -> http::response::Parts {
         self.recv_response_with_method(&http::Method::GET).await
     }
-    
+
     async fn recv_response_with_method(&mut self, method: &http::Method) -> http::response::Parts {
         Self::read_out_socket(&self.socket, &mut self.quic_conn);
         Self::flush_quic_data(&self.socket, &mut self.quic_conn);
@@ -434,16 +434,19 @@ impl Http3Session {
 
                     let response = response.body(()).unwrap().into_parts().0;
                     info!("Received response: {:?}", response);
-                    
+
                     // Track if this is a CONNECT tunnel - don't send FIN for tunnels
-                    if method == &http::Method::CONNECT {
+                    if method == http::Method::CONNECT {
                         self.is_tunnel = true;
                     }
 
                     if !self.is_tunnel {
                         loop {
                             let stream_id = self.stream_id();
-                            match self.h3_conn.send_body(&mut self.quic_conn, stream_id, &[], true) {
+                            match self
+                                .h3_conn
+                                .send_body(&mut self.quic_conn, stream_id, &[], true)
+                            {
                                 Ok(_) => break,
                                 Err(h3::Error::Done) => {
                                     Self::flush_quic_data(&self.socket, &mut self.quic_conn);
@@ -455,7 +458,11 @@ impl Http3Session {
                                     Self::read_out_socket(&self.socket, &mut self.quic_conn);
                                 }
                                 // If stream/connection already closed, that's fine
-                                Err(h3::Error::TransportError(_) | h3::Error::StreamBlocked | h3::Error::IdError) => {
+                                Err(
+                                    h3::Error::TransportError(_)
+                                    | h3::Error::StreamBlocked
+                                    | h3::Error::IdError,
+                                ) => {
                                     break;
                                 }
                                 Err(e) => panic!("Failed to finish stream: {}", e),
@@ -463,7 +470,7 @@ impl Http3Session {
                         }
                         Self::flush_quic_data(&self.socket, &mut self.quic_conn);
                     }
-                    
+
                     return response;
                 }
                 h3::Event::Finished => {
@@ -530,7 +537,10 @@ impl Http3Session {
         if !self.is_tunnel {
             loop {
                 let stream_id = self.stream_id();
-                match self.h3_conn.send_body(&mut self.quic_conn, stream_id, &[], true) {
+                match self
+                    .h3_conn
+                    .send_body(&mut self.quic_conn, stream_id, &[], true)
+                {
                     Ok(_) => break,
                     Err(h3::Error::Done) => {
                         Self::flush_quic_data(&self.socket, &mut self.quic_conn);
@@ -542,7 +552,11 @@ impl Http3Session {
                         Self::read_out_socket(&self.socket, &mut self.quic_conn);
                     }
                     // If stream/connection already closed
-                    Err(h3::Error::TransportError(_) | h3::Error::StreamBlocked | h3::Error::IdError) => {
+                    Err(
+                        h3::Error::TransportError(_)
+                        | h3::Error::StreamBlocked
+                        | h3::Error::IdError,
+                    ) => {
                         break;
                     }
                     Err(e) => panic!("Failed to finish stream: {}", e),

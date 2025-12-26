@@ -1,8 +1,9 @@
 use rustls::{Certificate, PrivateKey};
-use rustls_pemfile::{certs, pkcs8_private_keys};
+use rustls_pki_types::pem::PemObject;
+use rustls_pki_types::{CertificateDer, PrivateKeyDer};
 use std::fs::File;
 use std::io;
-use std::io::{BufReader, ErrorKind};
+use std::io::{BufReader, ErrorKind, Read};
 
 pub fn hex_dump(buf: &[u8]) -> String {
     buf.iter()
@@ -71,20 +72,39 @@ impl<L, R> Either<L, R> {
 }
 
 pub fn load_certs(filename: &str) -> io::Result<Vec<Certificate>> {
-    certs(&mut BufReader::new(File::open(filename)?))
+    let mut reader = BufReader::new(File::open(filename)?);
+    let mut pem_data = String::new();
+    reader.read_to_string(&mut pem_data).map_err(|e| {
+        io::Error::new(
+            ErrorKind::InvalidInput,
+            format!("Failed to read file: {}", e),
+        )
+    })?;
+
+    CertificateDer::pem_slice_iter(pem_data.as_bytes())
+        .collect::<Result<Vec<_>, _>>()
         .map_err(|e| io::Error::new(ErrorKind::InvalidInput, format!("Invalid cert: {}", e)))
-        .map(|mut certs| certs.drain(..).map(Certificate).collect())
+        .map(|certs| {
+            certs
+                .into_iter()
+                .map(|c| Certificate(c.into_owned().to_vec()))
+                .collect()
+        })
 }
 
 pub fn load_private_key(filename: &str) -> io::Result<PrivateKey> {
-    pkcs8_private_keys(&mut BufReader::new(File::open(filename)?))
+    let mut reader = BufReader::new(File::open(filename)?);
+    let mut pem_data = String::new();
+    reader.read_to_string(&mut pem_data).map_err(|e| {
+        io::Error::new(
+            ErrorKind::InvalidInput,
+            format!("Failed to read file: {}", e),
+        )
+    })?;
+
+    PrivateKeyDer::from_pem_slice(pem_data.as_bytes())
         .map_err(|e| io::Error::new(ErrorKind::InvalidInput, format!("Invalid key: {}", e)))
-        .and_then(|keys| {
-            keys.first()
-                .cloned()
-                .ok_or_else(|| io::Error::new(ErrorKind::Other, "No keys found"))
-        })
-        .map(PrivateKey)
+        .map(|key| PrivateKey(key.secret_der().to_vec()))
 }
 
 pub trait IterJoin {

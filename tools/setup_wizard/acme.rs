@@ -232,28 +232,30 @@ impl AcmeClient {
         // 4. Generate key pair and CSR
         println!("Generating certificate signing request...");
 
-        let mut params = CertificateParams::new(vec![domain.to_string()]);
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256)
+            .map_err(|e| AcmeError::CsrGeneration(e.to_string()))?;
+
+        let mut params = CertificateParams::new(vec![domain.to_string()])
+            .map_err(|e| AcmeError::CsrGeneration(e.to_string()))?;
         params.distinguished_name = DistinguishedName::new();
         params.distinguished_name.push(DnType::CommonName, domain);
-        params.alg = &rcgen::PKCS_ECDSA_P256_SHA256;
 
-        let cert = rcgen::Certificate::from_params(params)
+        let csr = params
+            .serialize_request(&key_pair)
             .map_err(|e| AcmeError::CsrGeneration(e.to_string()))?;
 
-        let csr_der = cert
-            .serialize_request_der()
-            .map_err(|e| AcmeError::CsrGeneration(e.to_string()))?;
+        let csr_der = csr.der().as_ref();
 
         // 5. Finalize order
         if order.state().status == OrderStatus::Ready {
             order
-                .finalize(&csr_der)
+                .finalize(csr_der)
                 .await
                 .map_err(|e| AcmeError::Finalization(e.to_string()))?;
             println!("✓ Order finalized");
         }
 
-        let key_pem = cert.serialize_private_key_pem();
+        let key_pem = key_pair.serialize_pem();
 
         // 6. Wait for certificate
         println!("Waiting for certificate...");

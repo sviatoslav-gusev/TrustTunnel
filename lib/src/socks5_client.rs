@@ -113,7 +113,7 @@ pub(crate) enum ExtendedAuthenticationValue<'this> {
     SniAuth,
 }
 
-impl<'this> ExtendedAuthenticationValue<'this> {
+impl ExtendedAuthenticationValue<'_> {
     const fn type_code(&self) -> u8 {
         match self {
             Self::Domain(_) => 0x01,
@@ -178,7 +178,7 @@ pub(crate) enum Authentication<'this> {
     Extended(Vec<ExtendedAuthenticationValue<'this>>),
 }
 
-impl<'this> Authentication<'this> {
+impl Authentication<'_> {
     const fn to_method(&self) -> AuthenticationMethod {
         match self {
             Self::UsernamePassword(..) => AuthenticationMethod::UsernamePassword,
@@ -211,7 +211,7 @@ pub(crate) enum Address<'this> {
     DomainName(Cow<'this, str>),
 }
 
-impl<'this> Address<'this> {
+impl Address<'_> {
     const fn address_type(&self) -> u8 {
         match self {
             Self::IpAddress(IpAddr::V4(_)) => ADDRESS_TYPE_IP_V4,
@@ -229,7 +229,7 @@ pub(crate) enum Request<'this> {
     UdpAssociate,
 }
 
-impl<'this> Request<'this> {
+impl Request<'_> {
     const fn command_code(&self) -> u8 {
         match self {
             Self::Connect(..) => 0x01,

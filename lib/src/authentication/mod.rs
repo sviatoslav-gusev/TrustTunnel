@@ -28,7 +28,7 @@ pub trait Authenticator: Send + Sync {
     fn authenticate(&self, source: &Source<'_>, log_id: &log_utils::IdChain<u64>) -> Status;
 }
 
-impl<'a> Source<'a> {
+impl Source<'_> {
     pub fn into_owned(self) -> Source<'static> {
         match self {
             Source::Sni(x) => Source::Sni(Cow::Owned(x.into_owned())),

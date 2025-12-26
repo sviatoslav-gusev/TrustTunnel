@@ -1289,7 +1289,7 @@ where
 {
     struct Visitor;
 
-    impl<'de> serde::de::Visitor<'de> for Visitor {
+    impl serde::de::Visitor<'_> for Visitor {
         type Value = u64;
 
         fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
@@ -1324,7 +1324,7 @@ where
 {
     struct Visitor;
 
-    impl<'de> serde::de::Visitor<'de> for Visitor {
+    impl serde::de::Visitor<'_> for Visitor {
         type Value = String;
 
         fn expecting(&self, formatter: &mut Formatter) -> std::fmt::Result {
@@ -1382,7 +1382,7 @@ where
         .map(|(idx, x)| {
             let username = demangle_toml_string(x["username"].to_string());
             let password = demangle_toml_string(x["password"].to_string());
-            
+
             if username.is_empty() {
                 return Err(serde::de::Error::custom(format!(
                     "Client #{}: username cannot be empty",
@@ -1395,7 +1395,7 @@ where
                     idx + 1
                 )));
             }
-            
+
             Ok(Client { username, password })
         })
         .collect::<Result<Vec<_>, _>>()?;

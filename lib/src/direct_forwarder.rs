@@ -1,8 +1,6 @@
-use crate::forwarder::Forwarder;
+use crate::forwarder::{Forwarder, IcmpMultiplexer, UdpMultiplexer};
 use crate::tcp_forwarder::TcpForwarder;
-use crate::{
-    authentication, core, datagram_pipe, downstream, forwarder, log_utils, tunnel, udp_forwarder,
-};
+use crate::{authentication, core, forwarder, log_utils, tunnel, udp_forwarder};
 use async_trait::async_trait;
 use std::io;
 use std::net::IpAddr;
@@ -46,23 +44,14 @@ impl Forwarder for DirectForwarder {
         &self,
         id: log_utils::IdChain<u64>,
         _: forwarder::UdpMultiplexerMeta,
-    ) -> io::Result<(
-        Arc<dyn forwarder::UdpDatagramPipeShared>,
-        Box<dyn datagram_pipe::Source<Output = forwarder::UdpDatagramReadStatus>>,
-        Box<dyn datagram_pipe::Sink<Input = downstream::UdpDatagram>>,
-    )> {
+    ) -> io::Result<UdpMultiplexer> {
         udp_forwarder::make_multiplexer(id)
     }
 
     fn make_icmp_datagram_multiplexer(
         &self,
         id: log_utils::IdChain<u64>,
-    ) -> io::Result<
-        Option<(
-            Box<dyn datagram_pipe::Source<Output = forwarder::IcmpDatagram>>,
-            Box<dyn datagram_pipe::Sink<Input = downstream::IcmpDatagram>>,
-        )>,
-    > {
+    ) -> io::Result<Option<IcmpMultiplexer>> {
         self.context
             .icmp_forwarder
             .as_ref()

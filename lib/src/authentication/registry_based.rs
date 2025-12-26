@@ -22,7 +22,7 @@ pub struct RegistryBasedAuthenticator {
 }
 
 impl RegistryBasedAuthenticator {
-    pub fn new(clients: &Vec<Client>) -> Self {
+    pub fn new(clients: &[Client]) -> Self {
         Self {
             clients: clients
                 .iter()

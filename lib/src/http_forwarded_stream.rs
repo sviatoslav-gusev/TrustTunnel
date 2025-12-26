@@ -512,6 +512,7 @@ impl ForwardedStreamSink {
 }
 
 impl SinkWaitingResponse {
+    #[allow(clippy::type_complexity)]
     fn parse_response(
         &mut self,
         data: Bytes,
@@ -615,7 +616,7 @@ impl SinkWaitingResponse {
         if self.request_method == http::Method::HEAD
             || response
                 .code
-                .map_or(false, |x| (100..200).contains(&x) || x == 204 || x == 304)
+                .is_some_and(|x| (100..200).contains(&x) || x == 204 || x == 304)
         {
             body_length = Some(BodyLength::Determined(0));
         }

@@ -9,12 +9,12 @@ name = "trusttunnel_endpoint"
 doctest = false
 
 [dependencies]
-clap = "4.3.8"
+clap = "4.5"
 console-subscriber = { version = "0.1.9", optional = true }
 log = "0.4.19"
 nix = { version = "0.28.0", features = ["resource"] }
-sentry = { version = "0.31.5", default-features = false, features = ["backtrace", "panic", "reqwest", "rustls", "contexts"] }
-tokio = { version = "1.28.2", features = ["rt-multi-thread", "signal"] }
+sentry = { version = "0.46.0", default-features = false, features = ["backtrace", "panic", "reqwest", "rustls", "contexts"] }
+tokio = { version = "1.42", features = ["rt-multi-thread", "signal"] }
 toml = { version = "0.7.4", default-features = false, features = ["parse"] }
 trusttunnel = { version = "0.1", path = "../lib" }
 

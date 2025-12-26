@@ -208,6 +208,7 @@ impl UdpConnection {
 }
 
 impl<F: Fn(pipe::SimplexDirection, usize) + Send + Sync> DuplexPipe<F> {
+    #[allow(clippy::type_complexity)]
     pub fn new(
         (source1, sink1): (
             Box<dyn datagram_pipe::Source<Output = downstream::UdpDatagram>>,

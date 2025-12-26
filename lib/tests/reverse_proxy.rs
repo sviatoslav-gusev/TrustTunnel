@@ -165,6 +165,7 @@ async fn run_endpoint(endpoint_address: &SocketAddr, proxy_address: &SocketAddr)
 
 fn run_proxy() -> (SocketAddr, impl Future<Output = ()>) {
     let server = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+    let _ = server.set_nonblocking(true);
     let server_addr = server.local_addr().unwrap();
     (server_addr, async move {
         let (socket, peer) = TcpListener::from_std(server)

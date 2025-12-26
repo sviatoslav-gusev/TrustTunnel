@@ -99,6 +99,17 @@ pub(crate) enum UdpDatagramReadStatus {
     UdpClose(UdpDatagramMeta, io::Error),
 }
 
+pub(crate) type UdpMultiplexer = (
+    Arc<dyn UdpDatagramPipeShared>,
+    Box<dyn datagram_pipe::Source<Output = UdpDatagramReadStatus>>,
+    Box<dyn datagram_pipe::Sink<Input = downstream::UdpDatagram>>,
+);
+
+pub(crate) type IcmpMultiplexer = (
+    Box<dyn datagram_pipe::Source<Output = IcmpDatagram>>,
+    Box<dyn datagram_pipe::Sink<Input = downstream::IcmpDatagram>>,
+);
+
 /// An abstract interface for a traffic forwarder implementation
 pub(crate) trait Forwarder: Send {
     /// Create a TCP connector object
@@ -112,22 +123,13 @@ pub(crate) trait Forwarder: Send {
         &self,
         id: log_utils::IdChain<u64>,
         meta: UdpMultiplexerMeta,
-    ) -> io::Result<(
-        Arc<dyn UdpDatagramPipeShared>,
-        Box<dyn datagram_pipe::Source<Output = UdpDatagramReadStatus>>,
-        Box<dyn datagram_pipe::Sink<Input = downstream::UdpDatagram>>,
-    )>;
+    ) -> io::Result<UdpMultiplexer>;
 
     /// Create an ICMP datagram multiplexer
     fn make_icmp_datagram_multiplexer(
         &self,
         id: log_utils::IdChain<u64>,
-    ) -> io::Result<
-        Option<(
-            Box<dyn datagram_pipe::Source<Output = IcmpDatagram>>,
-            Box<dyn datagram_pipe::Sink<Input = downstream::IcmpDatagram>>,
-        )>,
-    >;
+    ) -> io::Result<Option<IcmpMultiplexer>>;
 }
 
 impl UdpDatagramMeta {

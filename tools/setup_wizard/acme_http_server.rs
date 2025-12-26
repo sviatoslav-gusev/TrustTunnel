@@ -26,9 +26,7 @@ async fn handle_request(
 ) -> Result<Response<Full<Bytes>>, Infallible> {
     let path = req.uri().path();
 
-    if path.starts_with(ACME_CHALLENGE_PATH_PREFIX) {
-        let request_token = &path[ACME_CHALLENGE_PATH_PREFIX.len()..];
-
+    if let Some(request_token) = path.strip_prefix(ACME_CHALLENGE_PATH_PREFIX) {
         if request_token == challenge_data.token {
             println!(
                 "  ✓ Serving ACME challenge response for token: {}",

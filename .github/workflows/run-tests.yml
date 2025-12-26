@@ -1,7 +1,7 @@
-name: Run tests
+name: Run tests and lint
 
 env:
-  RUST_CHANNEL: 1.67
+  RUST_CHANNEL: 1.85
 
 on:
   push:
@@ -17,6 +17,7 @@ on:
 
 jobs:
   tests:
+    name: Test & Lint
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
@@ -24,19 +25,21 @@ jobs:
     if: "!startsWith(github.event.head_commit.message, 'skipci:')"
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Cargo cache
-        uses: actions/cache@v3
-        id: cargo-cache
+      - name: Install Rust ${{ env.RUST_CHANNEL }}
+        uses: dtolnay/rust-toolchain@master
         with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ matrix.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          toolchain: ${{ env.RUST_CHANNEL }}
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
 
       - name: Run tests
         run: |
           cargo test --workspace
+
+      - name: Lint Rust
+        run: |
+          make lint-rust

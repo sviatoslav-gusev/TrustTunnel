@@ -180,7 +180,7 @@ impl QuicMultiplexer {
                         Some(m) => Some(Event::UdpSend(m)),
                         None => return Err(io::Error::new(ErrorKind::Other, "Message receiving channel closed unexpectedly")),
                     },
-                    _ = &mut wait_timeout, if self.closest_deadline.map_or(false, |x| x > Instant::now()) => None,
+                    _ = &mut wait_timeout, if self.closest_deadline.is_some_and(|x| x > Instant::now()) => None,
                 }
             };
 
@@ -567,6 +567,7 @@ impl QuicMultiplexer {
         })
     }
 
+    #[allow(clippy::type_complexity)]
     fn on_new_connection(
         &mut self,
         peer: &SocketAddr,
@@ -691,7 +692,7 @@ impl QuicMultiplexer {
     ) {
         let deadline = Instant::now() + duration;
         self.deadlines.insert(conn_id, deadline);
-        if self.closest_deadline.map_or(true, |x| x > deadline) {
+        if self.closest_deadline.is_none_or(|x| x > deadline) {
             self.closest_deadline = Some(deadline);
         }
     }

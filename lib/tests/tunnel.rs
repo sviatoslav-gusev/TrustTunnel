@@ -443,6 +443,7 @@ async fn make_h2_tunnel(
 
 fn run_tcp_server(is_download: bool) -> SocketAddr {
     let server = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+    let _ = server.set_nonblocking(true);
     let server_addr = server.local_addr().unwrap();
 
     thread::spawn(move || {
@@ -484,6 +485,7 @@ fn run_tcp_server(is_download: bool) -> SocketAddr {
 
 fn run_udp_server(is_download: bool) -> SocketAddr {
     let server = std::net::UdpSocket::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+    let _ = server.set_nonblocking(true);
     let server_addr = server.local_addr().unwrap();
 
     thread::spawn(move || {

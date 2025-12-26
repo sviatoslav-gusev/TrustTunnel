@@ -196,9 +196,7 @@ impl pipe::Source for RequestStream {
         match self.rx.data().await {
             None => Ok(pipe::Data::Eof),
             Some(Ok(chunk)) => Ok(pipe::Data::Chunk(chunk)),
-            Some(Err(e)) if e.reason().map_or(true, |r| r == Reason::NO_ERROR) => {
-                Ok(pipe::Data::Eof)
-            }
+            Some(Err(e)) if e.reason().is_none_or(|r| r == Reason::NO_ERROR) => Ok(pipe::Data::Eof),
             Some(Err(e)) => Err(h2_to_io_error(e)),
         }
     }
@@ -252,7 +250,7 @@ pub struct WaitWritable<'a> {
     stream: &'a mut SendStream<Bytes>,
 }
 
-impl<'a> std::future::Future for WaitWritable<'a> {
+impl std::future::Future for WaitWritable<'_> {
     type Output = io::Result<()>;
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
@@ -313,7 +311,7 @@ impl http_codec::DroppingSink for RespondStream {
 
 fn h2_to_io_error(e: h2::Error) -> io::Error {
     let reason = e.reason();
-    if reason.as_ref().map_or(true, |r| *r == Reason::NO_ERROR) {
+    if reason.as_ref().is_none_or(|r| *r == Reason::NO_ERROR) {
         return io::Error::from(ErrorKind::UnexpectedEof);
     }
 

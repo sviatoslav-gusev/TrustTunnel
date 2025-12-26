@@ -191,7 +191,7 @@ fn main() {
             .collect();
 
         let client_config = client_config::build(
-            &username,
+            username,
             addresses,
             settings.get_clients(),
             &tls_hosts_settings,
@@ -258,6 +258,7 @@ fn main() {
         }
     };
 
+    #[allow(clippy::await_holding_lock)]
     let interrupt_task = async move {
         tokio::signal::ctrl_c().await.unwrap();
         shutdown.lock().unwrap().submit();

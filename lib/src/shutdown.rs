@@ -120,6 +120,7 @@ impl Display for NotificationError {
 }
 
 #[cfg(test)]
+#[allow(clippy::await_holding_lock)]
 mod tests {
     use crate::shutdown::Shutdown;
     use std::time::Duration;

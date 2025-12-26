@@ -229,8 +229,10 @@ fn generate_cert() -> Option<Cert> {
             });
         (name.clone(), vec![name.clone(), format!("*.{}", name)])
     };
-    let mut params = rcgen::CertificateParams::new(alt_names.clone());
-    params.alg = &rcgen::PKCS_ECDSA_P256_SHA256;
+    let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256)
+        .expect("Failed to generate key pair");
+
+    let mut params = rcgen::CertificateParams::new(alt_names.clone()).unwrap();
     let now = chrono::Local::now();
     let end_date = now
         .checked_add_days(chrono::Days::new(DEFAULT_CERTIFICATE_DURATION_DAYS))
@@ -245,7 +247,9 @@ fn generate_cert() -> Option<Cert> {
         .distinguished_name
         .push(DnType::CommonName, &common_name);
 
-    let cert = rcgen::Certificate::from_params(params).unwrap();
+    let cert = params
+        .self_signed(&key_pair)
+        .expect("Failed to generate self-signed cert");
     let cert_path = format!("{DEFAULT_CERTIFICATE_FOLDER}/cert.pem");
     if !checked_overwrite(&cert_path, "Overwrite the existing certificate file?") {
         return None;
@@ -258,22 +262,20 @@ fn generate_cert() -> Option<Cert> {
 
     fs::create_dir_all(Path::new(&cert_path).parent().unwrap())
         .expect("Couldn't create certificate directory path");
-    fs::write(&cert_path, cert.serialize_pem().unwrap())
-        .expect("Couldn't write the certificate into a file");
+    fs::write(&cert_path, cert.pem()).expect("Couldn't write the certificate into a file");
     println!("The generated certificate is stored in file: {}", cert_path);
 
     fs::create_dir_all(Path::new(&key_path).parent().unwrap())
         .expect("Couldn't create private key directory path");
     if key_path != cert_path {
-        fs::write(key_path.clone(), cert.serialize_private_key_pem())
+        fs::write(key_path.clone(), key_pair.serialize_pem())
             .expect("Couldn't write the private key into a file");
     } else {
         fs::OpenOptions::new()
-            .write(true)
             .append(true)
             .open(key_path.clone())
             .expect("Couldn't open a file for writing the private key")
-            .write_all(cert.serialize_private_key_pem().as_bytes())
+            .write_all(key_pair.serialize_pem().as_bytes())
             .expect("Couldn't write the private key into a file");
     }
     println!("The generated private key is stored in file: {}", key_path);
@@ -498,7 +500,7 @@ fn ask_for_alternative_snis() -> Vec<String> {
     if crate::get_mode() == Mode::NonInteractive {
         return vec![];
     }
-    
+
     if !ask_for_agreement("Do you want to configure alternative SNIs?") {
         return vec![];
     }

@@ -177,7 +177,7 @@ fn generate_rules_toml_content(rules_config: &trusttunnel::rules::RulesConfig) -
     // Serialize the actual rules (usually empty)
     if !rules_config.rule.is_empty() {
         content.push_str(&toml::ser::to_string(rules_config).unwrap());
-        content.push_str("\n");
+        content.push('\n');
     }
 
     content

@@ -8,7 +8,7 @@ use toml_edit::{value, Document};
 pub fn build(
     client: &String,
     addresses: Vec<SocketAddr>,
-    username: &Vec<registry_based::Client>,
+    username: &[registry_based::Client],
     hostsettings: &TlsHostsSettings,
 ) -> ClientConfig {
     let user = username
@@ -23,7 +23,7 @@ pub fn build(
 
     ClientConfig {
         hostname: host.hostname.clone(),
-        addresses: addresses,
+        addresses,
         has_ipv6: true, // Hardcoded to true, client could change this himself
         username: user.username.clone(),
         password: user.password.clone(),

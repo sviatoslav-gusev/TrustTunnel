@@ -204,6 +204,7 @@ async fn do_connect_request(
 
 fn make_socks_server_harness() -> (SocketAddr, impl Future<Output = Vec<u8>>) {
     let server = std::net::TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+    let _ = server.set_nonblocking(true);
     let server_addr = server.local_addr().unwrap();
 
     let task = async move {

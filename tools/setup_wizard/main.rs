@@ -174,7 +174,7 @@ Required in non-interactive mode."#,
             .map(|x| x.splitn(2, ':'))
             .and_then(|mut x| x.next().zip(x.next()))
             .map(|(a, b)| (a.to_string(), b.to_string()))
-            .and_then(|(username, password)| {
+            .map(|(username, password)| {
                 if username.is_empty() {
                     eprintln!("Error: Username cannot be empty");
                     std::process::exit(1);
@@ -183,7 +183,7 @@ Required in non-interactive mode."#,
                     eprintln!("Error: Password cannot be empty");
                     std::process::exit(1);
                 }
-                Some((username, password))
+                (username, password)
             }),
         hostname: args.get_one::<String>(HOSTNAME_PARAM_NAME).cloned(),
         library_settings_file: args
@@ -287,10 +287,7 @@ fn print_setup_complete_summary(
         "  • {}          - Main endpoint settings",
         lib_settings_path
     );
-    println!(
-        "  • {}    - TLS host configuration",
-        hosts_settings_path
-    );
+    println!("  • {}    - TLS host configuration", hosts_settings_path);
     println!(
         "  • {}  - User credentials",
         library_settings::DEFAULT_CREDENTIALS_PATH
