@@ -301,7 +301,7 @@ impl Core {
             socket,
             self.context.tls_demux.clone(),
             self.context.next_client_id.clone(),
-        );
+        )?;
 
         loop {
             let socket = quic_listener.listen().await?;

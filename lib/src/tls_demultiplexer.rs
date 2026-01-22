@@ -3,9 +3,13 @@ use crate::settings::Settings;
 use crate::{net_utils, settings, utils};
 use rustls::{Certificate, PrivateKey};
 use smallvec::SmallVec;
+use boring::pkey::{PKey, Private};
+use boring::x509::X509;
+use boring::rsa::Rsa;
 use std::collections::HashMap;
 use std::fmt::{Debug, Formatter};
 use std::io;
+use std::sync::Arc;
 
 const DEFAULT_PROTOCOL: Protocol = Protocol::Http1;
 
@@ -14,6 +18,12 @@ pub(crate) enum Protocol {
     Http1,
     Http2,
     Http3,
+}
+
+#[derive(Clone)]
+pub(crate) struct BoringIdentity {
+    pub chain: Arc<Vec<X509>>,
+    pub key: Arc<PKey<Private>>,
 }
 
 struct Host {
@@ -25,6 +35,8 @@ struct Host {
     key_path: String,
     /// Alternative SNIs that should be accepted for this host
     allowed_sni: Vec<String>,
+    /// Pre-parsed certificates and private key for boring SSL (performance optimization)
+    boring: BoringIdentity,
 }
 
 #[derive(Clone)]
@@ -45,6 +57,8 @@ pub(crate) struct ConnectionMeta {
     pub key_path: String,
     /// The SNI-based authentication credentials is some
     pub sni_auth_creds: Option<String>,
+    /// Pre-parsed certificates and private key for boring SSL (performance optimization)
+    pub boring: BoringIdentity,
 }
 
 impl Debug for ConnectionMeta {
@@ -112,23 +126,56 @@ impl TlsDemux {
         // false-positive
         #[allow(unused_variables)]
         let make_entry = |x: &settings::TlsHostInfo| -> io::Result<(String, Host)> {
+            let cert_chain = if cfg!(test) {
+                Default::default()
+            } else {
+                utils::load_certs(&x.cert_chain_path)?
+            };
+
+            let key = if cfg!(test) {
+                PrivateKey(Default::default())
+            } else {
+                utils::load_private_key(&x.private_key_path)?
+            };
+
+            let boring = if cfg!(test) {
+                // Create dummy BoringIdentity for tests
+                let rsa = Rsa::generate(2048).unwrap();
+                let pkey = PKey::from_rsa(rsa).unwrap();
+                BoringIdentity {
+                    chain: Arc::new(Vec::new()),
+                    key: Arc::new(pkey),
+                }
+            } else {
+                let mut chain = Vec::with_capacity(cert_chain.len());
+                for c in &cert_chain {
+                    chain.push(
+                        X509::from_der(&c.0)
+                            .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("X509 parse error: {e}")))?,
+                    );
+                }
+
+                let key_bytes = &key.0;
+                let boring_key: PKey<Private> = PKey::private_key_from_der(key_bytes)
+                    .or_else(|_| PKey::private_key_from_pkcs8(key_bytes))
+                    .or_else(|_| PKey::private_key_from_pem(key_bytes))
+                    .map_err(|e| io::Error::new(io::ErrorKind::Other, format!("PKey parse error: {e}")))?;
+
+                BoringIdentity {
+                    chain: Arc::new(chain),
+                    key: Arc::new(boring_key),
+                }
+            };
+            
             Ok((
                 x.hostname.clone(),
                 Host {
-                    cert_chain: if cfg!(test) {
-                        Default::default()
-                    } else {
-                        // @todo: check if cert is expired?
-                        utils::load_certs(&x.cert_chain_path)?
-                    },
-                    key: if cfg!(test) {
-                        PrivateKey(Default::default())
-                    } else {
-                        utils::load_private_key(&x.private_key_path)?
-                    },
+                    cert_chain,
+                    key,
                     cert_chain_path: x.cert_chain_path.clone(),
                     key_path: x.private_key_path.clone(),
                     allowed_sni: x.allowed_sni.clone(),
+                    boring,
                 },
             ))
         };
@@ -190,6 +237,7 @@ impl TlsDemux {
             cert_chain_path: host.cert_chain_path.clone(),
             key_path: host.key_path.clone(),
             sni_auth_creds: None,
+            boring: host.boring.clone()
         }
     }
 
@@ -288,6 +336,7 @@ impl TlsDemux {
             cert_chain_path: host.cert_chain_path.clone(),
             key_path: host.key_path.clone(),
             sni_auth_creds: auth,
+            boring: host.boring.clone()
         })
     }
 
