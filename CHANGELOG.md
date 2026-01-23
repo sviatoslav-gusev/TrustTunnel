@@ -2,12 +2,14 @@
 
 ## 0.9.115
 
-- Fixed an issue where client_random_prefix rules didn’t match when Anti-DPI or post-quantum cryptography was enabled.
+- Fixed an issue where `client_random_prefix` rules didn’t match when Anti-DPI or post-quantum cryptography was enabled.
+  *(Credits pending)*
 
 ## 0.9.114
 
-- Fixed an issue where allow_private_network_connections set to false could be bypassed
+- Fixed an issue where `allow_private_network_connections` set to false could be bypassed
 when a numeric address was used.
+  *(Credits pending)*
 
 ## 0.9.87
 
