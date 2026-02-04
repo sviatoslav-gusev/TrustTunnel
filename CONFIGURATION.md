@@ -472,7 +472,7 @@ A systemd service template is provided. Default configuration assumes files in `
 
 ```bash
 # Install service
-sudo cp /opt/trusttunnel/trusttunnel.service.template /etc/systemd/system/
+sudo cp /opt/trusttunnel/trusttunnel.service.template /etc/systemd/system/trusttunnel.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now trusttunnel
 
